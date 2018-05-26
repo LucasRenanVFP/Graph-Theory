@@ -1,108 +1,77 @@
-#include<bits/stdc++.h>
+#include <vector>
+#include <stack>
+#include <iostream>
+#include <algorithm>
+
+#include "graph.h"
 
 using namespace std;
 
 class DCSC {
   public:
-  vector< vector<int> > graph;
-  vector< vector<int> > reverse_graph;
-  int n;
-  vector< vector<int> > groups;
-  vector<bool> used;
-  int current_group;
-  DCSC() {}
+  Graph& graph;
+  vector<vector<int>> components;
+  vector<bool> visited;
+  vector<bool> processed;
 
-  DCSC(int _n) : n(_n), graph(_n + 1), reverse_graph(_n + 1), used(_n + 1, false), groups(_n + 2) {}
+  DCSC(Graph& graph) : graph(graph), processed(graph.n) {}
 
-  void addEdge(int u, int v) {
-    graph[u].push_back(v);
-    reverse_graph[v].push_back(u);
-  }
-
-  void dfs(int u) {
-    used[u] = true;
-    for(int v : graph[u]) {
-      if(!used[v]) dfs(v);
-    }
-    vertex_stack.push(u);
-  }
-
-  void reverse_dfs(int u, int group) {
-    groups[group].push_back(u);
-    used[u] = true;
-    for(int v : reverse_graph[u]) {
-      if(!used[v]) reverse_dfs(v, group);
+  void getDescendants(int v, vector<int> &desc) {
+    desc.push_back(v);
+    visited[v] = true;
+    for(int u : graph.children[v]) {
+      if(!visited[u]) getDescendants(u, desc);
     }
   }
 
-  void getDecendent(int u, vector<int> &decendent) {
-    decendent.push_back(u);
-    for(int v : graph[u]) {
-      if(!used[v]) getDecendent(v, decendent);
+  void getPredecessors(int v, vector<int> &pred) {
+    pred.push_back(v);
+    visited[v] = true;
+    for(int u : graph.parents[v]) {
+      if(!visited[u]) getPredecessors(u, pred);
     }
   }
 
-  void getGroup(int u) {
-    groups[current_group].push_back(u);
-    vector<int> decendent;
-    getDecendent(u, decendent);
-    vector<int> predecendent;
-    getPredecendent(u, predecendent);
-    for(int v : decendent) {
-      if(v == u) continue;
-      if(is_predecendent[v]) {
-        groups[current_group].push_back(v);
-        used[v] = true;
+  void findComponent(int v) {
+    vector<int> component;
+    vector<int> desc;
+    vector<int> pred;
+
+    visited = processed;
+    getDescendants(v, desc);
+    visited = processed;
+    getPredecessors(v, pred);
+
+
+    for(int u : desc) {
+      if(visited[u]) {
+        component.push_back(u);
+        processed[u] = true;
       }
     }
+
+    components.push_back(component);
   }
 
-  void process() {
-    current_group = 0;
-    for(int i = 1; i <= n; i++) {
-      if(!used[i]) {
-        getGroup(i);
+  void run() {
+    for(int i = 0; i < graph.n; i++) {
+      if(!processed[i]) {
+        findComponent(i);
       }
+    }
+
+    for(int i = 0; i < components.size(); i++) {
+      sort(components[i].begin(), components[i].end());
     }
   }
 
-  vector< vector<int> > getSCC() {
-    process();
-    return groups;
+  void print() {
+    for(int i = 0; i < components.size(); i++) {
+      for(int j = 0; j < components[i].size(); j++) {
+        if(j != 0) cout << " ";
+        cout << components[i][j];
+      }
+      cout << endl;
+    }
   }
 };
-
-int n, m;
-
-int main() {
-  ios::sync_with_stdio(false);
-  cin >> n >> m;
-  Kosaraju kos(n);
-  for(int i = 0; i < m; i++) {
-    int u, v;
-    cin >> u >> v;
-    kos.addEdge(u, v);
-  }
-  vector< vector<int> > scc = kos.getSCC();
-  for(int i = 0; i < scc.size(); i++) {
-    cout << "Group #" << i << ":\n";
-    for(int j = 0; j < scc[i].size(); j++) {
-      if(j != 0) cout << " ";
-      cout << scc[i][j];
-    }
-    cout << "\n";
-  }
-  return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,6 +2,7 @@
 
 #include "graph.h"
 #include "kosaraju.cpp"
+#include "dcsc.cpp"
 
 using namespace std;
 
@@ -30,13 +31,19 @@ Graph generate(int n, int m) {
 
 int main() {
     Graph graph = generate(5, 5);
+
     Kosaraju kos(graph);
     kos.run();
 
+    DCSC dcsc(graph);
+    dcsc.run();
+
     cout << "Edges: " << endl;
     graph.print();
-    cout << "Components: " << endl;
+    cout << "Components (Kosaraju): " << endl;
     kos.print();
+    cout << "Components (DCSC): " << endl;
+    dcsc.print();
 
     return 0;
 }
