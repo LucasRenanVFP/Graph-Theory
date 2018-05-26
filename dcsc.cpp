@@ -2,67 +2,90 @@
 #include <stack>
 #include <iostream>
 #include <algorithm>
+#include <unordered_set>
 
 #include "graph.h"
 
 using namespace std;
 
 class DCSC {
-  public:
+public:
   Graph& graph;
   vector<vector<int>> components;
-  vector<bool> visited;
-  vector<bool> processed;
 
-  DCSC(Graph& graph) : graph(graph), processed(graph.n) {}
+  DCSC(Graph& graph) : graph(graph) {}
 
-  void getDescendants(int v, vector<int> &desc) {
-    desc.push_back(v);
-    visited[v] = true;
+  void getDescendants(int v,
+                      unordered_set<int> &vertices,
+                      unordered_set<int> &desc,
+                      unordered_set<int> &desc_pred) {
+    desc.insert(v);
+    desc_pred.insert(v);
     for(int u : graph.children[v]) {
-      if(!visited[u]) getDescendants(u, desc);
+      if(vertices.find(u) != vertices.end() && desc.find(u) == desc.end())
+        getDescendants(u, vertices, desc, desc_pred);
     }
   }
 
-  void getPredecessors(int v, vector<int> &pred) {
-    pred.push_back(v);
-    visited[v] = true;
+  void getPredecessors(int v,
+                       unordered_set<int> &vertices,
+                       unordered_set<int> &pred,
+                       unordered_set<int> &desc_pred) {
+    pred.insert(v);
+    desc_pred.insert(v);
     for(int u : graph.parents[v]) {
-      if(!visited[u]) getPredecessors(u, pred);
+      if(vertices.find(u) != vertices.end() && pred.find(u) == pred.end())
+        getPredecessors(u, vertices, pred, desc_pred);
     }
   }
 
-  void findComponent(int v) {
+  void findComponent(unordered_set<int> &vertices) {
+    if (vertices.size() == 0) return;
+
+    int v = *vertices.begin();
+
     vector<int> component;
-    vector<int> desc;
-    vector<int> pred;
+    unordered_set<int> desc;
+    unordered_set<int> pred;
+    unordered_set<int> desc_pred;
 
-    visited = processed;
-    getDescendants(v, desc);
-    visited = processed;
-    getPredecessors(v, pred);
+    getDescendants(v, vertices, desc, desc_pred);
+    getPredecessors(v, vertices, pred, desc_pred);
 
-
-    for(int u : desc) {
-      if(visited[u]) {
-        component.push_back(u);
-        processed[u] = true;
+    for(int v : desc) {
+      if(pred.find(v) != pred.end()) {
+        component.push_back(v);
       }
     }
-
     components.push_back(component);
+
+    for (int i : desc_pred) {
+      vertices.erase(i);
+    }
+    findComponent(vertices);
+
+    for (int i : component) {
+      pred.erase(i);
+      desc.erase(i);
+    }
+    findComponent(pred);
+    findComponent(desc);
   }
 
   void run() {
-    for(int i = 0; i < graph.n; i++) {
-      if(!processed[i]) {
-        findComponent(i);
-      }
+    unordered_set<int> vertices;
+
+    for (int i = 0; i < graph.n; i++) {
+      vertices.insert(i);
     }
+
+    findComponent(vertices);
 
     for(int i = 0; i < components.size(); i++) {
       sort(components[i].begin(), components[i].end());
     }
+
+    sort(components.begin(), components.end());
   }
 
   void print() {
