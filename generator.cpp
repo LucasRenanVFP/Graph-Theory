@@ -1,5 +1,7 @@
 #include <random>
 #include <chrono>
+#include <iostream>
+#include <sstream>
 
 #include "graph.h"
 #include "kosaraju.cpp"
@@ -31,10 +33,17 @@ Graph generate(int n, int m) {
     return graph;
 }
 
-int main() {
-    int vertices = 20000;
-    int edges = 100000;
+int main(int argc, char* argv[]) {
+    int vertices, edges;
+    if (argc < 3) {
+        cout << "usage: " << argv[0] << " [vertices] [edges]" << endl;
+        exit(1);
+    }
+
+    stringstream(argv[1]) >> vertices;
+    stringstream(argv[2]) >> edges;
     Graph graph = generate(vertices, edges);
+    cout << vertices << " vertices / " << edges << " edges" << endl;
 
     Kosaraju kos(graph);
     auto start_time = chrono::high_resolution_clock::now();
@@ -54,7 +63,6 @@ int main() {
     end_time = chrono::high_resolution_clock::now();
     long dcsc_set_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
-    cout << vertices << " vertices / " << edges << " edges" << endl;
     // cout << "Edges: " << endl;
     // graph.print();
     cout << "Components Kosaraju: " << kos_time << "ms" << endl;
