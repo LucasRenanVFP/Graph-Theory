@@ -1,4 +1,5 @@
 #include <random>
+#include <chrono>
 
 #include "graph.h"
 #include "kosaraju.cpp"
@@ -30,20 +31,33 @@ Graph generate(int n, int m) {
 }
 
 int main() {
-    Graph graph = generate(5, 5);
+    int vertices = 20000;
+    int edges = 2000;
+    Graph graph = generate(vertices, edges);
 
     Kosaraju kos(graph);
+    auto start_time = chrono::high_resolution_clock::now();
     kos.run();
+    auto end_time = chrono::high_resolution_clock::now();
+    long kos_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
     DCSC dcsc(graph);
+    start_time = chrono::high_resolution_clock::now();
     dcsc.run();
+    end_time = chrono::high_resolution_clock::now();
+    long dcsc_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
-    cout << "Edges: " << endl;
-    graph.print();
-    cout << "Components (Kosaraju): " << endl;
-    kos.print();
-    cout << "Components (DCSC): " << endl;
-    dcsc.print();
+    cout << vertices << " vertices / " << edges << " edges" << endl;
+    // cout << "Edges: " << endl;
+    // graph.print();
+    cout << "Components Kosaraju (" << kos_time << "ms)" << endl;
+    // kos.print();
+    cout << "Components DCSC (" << dcsc_time << "ms)" << endl;
+
+    if (dcsc.result() == kos.result()) {
+        cout << "Results match";
+    }
+    // dcsc.print();
 
     return 0;
 }

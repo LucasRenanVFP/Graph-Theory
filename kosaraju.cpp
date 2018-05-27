@@ -50,15 +50,16 @@ public:
       cur_component++;
     }
 
-    for(int i = 0; i < cur_component; i++) {
-      sort(components[i].begin(), components[i].end());
-    }
-
     components.resize(cur_component);
-    sort(components.begin(), components.end());
   }
 
   vector<vector<int>> result() {
+    for(int i = 0; i < components.size(); i++) {
+      sort(components[i].begin(), components[i].end());
+    }
+
+    sort(components.begin(), components.end());
+
     return components;
   }
 

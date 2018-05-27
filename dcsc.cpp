@@ -39,38 +39,44 @@ public:
     }
   }
 
-  void findComponent(unordered_set<int> &vertices) {
-    if (vertices.size() == 0) return;
+  void findComponents(unordered_set<int> &starting_vertices) {
+    stack<unordered_set<int>> work_stack;
+    work_stack.push(starting_vertices);
 
-    int v = *vertices.begin();
+    while (work_stack.size() != 0) {
+      unordered_set<int>& vertices = work_stack.top();
 
-    vector<int> component;
-    unordered_set<int> desc;
-    unordered_set<int> pred;
-    unordered_set<int> desc_pred;
+      int v = *vertices.begin();
 
-    getDescendants(v, vertices, desc, desc_pred);
-    getPredecessors(v, vertices, pred, desc_pred);
+      vector<int> component;
+      unordered_set<int> desc;
+      unordered_set<int> pred;
+      unordered_set<int> desc_pred;
 
-    for(int v : desc) {
-      if(pred.find(v) != pred.end()) {
-        component.push_back(v);
+      getDescendants(v, vertices, desc, desc_pred);
+      getPredecessors(v, vertices, pred, desc_pred);
+
+      for(int v : desc) {
+        if(pred.find(v) != pred.end()) {
+          component.push_back(v);
+        }
       }
-    }
-    components.push_back(component);
+      components.push_back(component);
 
-    for (int i : desc_pred) {
-      vertices.erase(i);
-    }
-    findComponent(vertices);
+      for (int i : desc_pred) {
+        vertices.erase(i);
+      }
 
-    for (int i : component) {
-      pred.erase(i);
-      desc.erase(i);
+      if (vertices.size() == 0) work_stack.pop();
+
+      for (int i : component) {
+        pred.erase(i);
+        desc.erase(i);
+      }
+      if (pred.size() != 0) work_stack.push(pred);
+      if (desc.size() != 0) work_stack.push(desc);
     }
-    findComponent(pred);
-    findComponent(desc);
-  }
+ }
 
   void run() {
     unordered_set<int> vertices;
@@ -79,13 +85,17 @@ public:
       vertices.insert(i);
     }
 
-    findComponent(vertices);
+    findComponents(vertices);
+  }
 
+  vector<vector<int>> result() {
     for(int i = 0; i < components.size(); i++) {
       sort(components[i].begin(), components[i].end());
     }
 
     sort(components.begin(), components.end());
+
+    return components;
   }
 
   void print() {
