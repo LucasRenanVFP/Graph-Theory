@@ -1,5 +1,6 @@
 #include <vector>
 #include <stack>
+#include <queue>
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
@@ -12,8 +13,10 @@ class DCSC {
 public:
   Graph& graph;
   vector<vector<int>> components;
+  vector<int> pred_count;
+  vector<int> desc_count;
 
-  DCSC(Graph& graph) : graph(graph) {}
+  DCSC(Graph& graph) : graph(graph), pred_count(graph.n), desc_count(graph.n) {}
 
   void getDescendants(int v,
                       unordered_set<int> &vertices,
@@ -80,12 +83,40 @@ public:
 
   void run() {
     unordered_set<int> vertices;
+    vector<int> pred_count(graph.n);
+    vector<int> desc_count(graph.n);
+    queue<int> trim_queue;
 
     for (int i = 0; i < graph.n; i++) {
-      vertices.insert(i);
+        vertices.insert(i);
+        pred_count[i] = graph.parents[i].size();
+        desc_count[i] = graph.children[i].size();
+        if (pred_count[i] == 0 || desc_count[i] == 0) trim_queue.push(i);
     }
 
-    findComponents(vertices);
+    while (trim_queue.size() != 0) {
+      int v = trim_queue.front();
+      trim_queue.pop();
+
+      vertices.erase(v);
+      components.push_back({v});
+
+      for (int u : graph.children[v]) {
+        pred_count[u] -= 1;
+        if (pred_count[u] == 0 && desc_count[u] != 0) {
+          trim_queue.push(u);
+        }
+      }
+
+      for (int u : graph.parents[v]) {
+        desc_count[u] -= 1;
+        if (desc_count[u] == 0 && pred_count[u] != 0) {
+          trim_queue.push(u);
+        }
+      }
+    }
+
+    if (vertices.size()) findComponents(vertices);
   }
 
   vector<vector<int>> result() {
