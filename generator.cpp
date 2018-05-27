@@ -3,7 +3,8 @@
 
 #include "graph.h"
 #include "kosaraju.cpp"
-#include "dcsc.cpp"
+#include "dcsc_qs.cpp"
+#include "dcsc_set.cpp"
 
 using namespace std;
 
@@ -32,7 +33,7 @@ Graph generate(int n, int m) {
 
 int main() {
     int vertices = 20000;
-    int edges = 2000;
+    int edges = 100000;
     Graph graph = generate(vertices, edges);
 
     Kosaraju kos(graph);
@@ -41,23 +42,34 @@ int main() {
     auto end_time = chrono::high_resolution_clock::now();
     long kos_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
-    DCSC dcsc(graph);
+    DCSC_QS dcsc_qs(graph);
     start_time = chrono::high_resolution_clock::now();
-    dcsc.run();
+    dcsc_qs.run();
     end_time = chrono::high_resolution_clock::now();
-    long dcsc_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    long dcsc_qs_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+
+    DCSC_Set dcsc_set(graph);
+    start_time = chrono::high_resolution_clock::now();
+    dcsc_set.run();
+    end_time = chrono::high_resolution_clock::now();
+    long dcsc_set_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
     cout << vertices << " vertices / " << edges << " edges" << endl;
     // cout << "Edges: " << endl;
     // graph.print();
-    cout << "Components Kosaraju (" << kos_time << "ms)" << endl;
+    cout << "Components Kosaraju: " << kos_time << "ms" << endl;
     // kos.print();
-    cout << "Components DCSC (" << dcsc_time << "ms)" << endl;
-
-    if (dcsc.result() == kos.result()) {
-        cout << "Results match";
-    }
+    cout << "Components DCSC (QS): " << dcsc_qs_time << "ms" << endl;
     // dcsc.print();
+    cout << "Components DCSC (Set): " << dcsc_set_time << "ms" << endl;
+
+    if (dcsc_qs.result() == kos.result() && kos.result() == dcsc_set.result()) {
+        cout << "Results match (" << dcsc_qs.result().size() << " scc's)";
+    } else {
+        cout << "Kosaraju found " << kos.result().size() << " components" << endl;
+        cout << "DCSC (QS) found " << dcsc_qs.result().size() << " components" << endl;
+        cout << "DCSC (Set) found " << dcsc_set.result().size() << " components" << endl;
+    }
 
     return 0;
 }

@@ -9,14 +9,14 @@
 
 using namespace std;
 
-class DCSC {
+class DCSC_Set {
 public:
   Graph& graph;
   vector<vector<int>> components;
   vector<int> pred_count;
   vector<int> desc_count;
 
-  DCSC(Graph& graph) : graph(graph), pred_count(graph.n), desc_count(graph.n) {}
+  DCSC_Set(Graph& graph) : graph(graph), pred_count(graph.n), desc_count(graph.n) {}
 
   void getDescendants(int v,
                       unordered_set<int> &vertices,
