@@ -54,7 +54,7 @@ public:
   }
 
   vector<vector<int>> result() {
-    for(int i = 0; i < components.size(); i++) {
+    for(size_t i = 0; i < components.size(); i++) {
       sort(components[i].begin(), components[i].end());
     }
 
@@ -64,8 +64,8 @@ public:
   }
 
   void print() {
-    for(int i = 0; i < components.size(); i++) {
-      for(int j = 0; j < components[i].size(); j++) {
+    for(size_t i = 0; i < components.size(); i++) {
+      for(size_t j = 0; j < components[i].size(); j++) {
         if(j != 0) cout << " ";
         cout << components[i][j];
       }

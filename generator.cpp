@@ -42,26 +42,27 @@ int main(int argc, char* argv[]) {
 
     stringstream(argv[1]) >> vertices;
     stringstream(argv[2]) >> edges;
-    Graph graph = generate(vertices, edges);
     cout << vertices << " vertices / " << edges << " edges" << endl;
+
+    Graph graph = generate(vertices, edges);
 
     Kosaraju kos(graph);
     auto start_time = chrono::high_resolution_clock::now();
     kos.run();
     auto end_time = chrono::high_resolution_clock::now();
-    long kos_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    auto kos_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
     DCSC_QS dcsc_qs(graph);
     start_time = chrono::high_resolution_clock::now();
     dcsc_qs.run();
     end_time = chrono::high_resolution_clock::now();
-    long dcsc_qs_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    auto dcsc_qs_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
     DCSC_Set dcsc_set(graph);
     start_time = chrono::high_resolution_clock::now();
     dcsc_set.run();
     end_time = chrono::high_resolution_clock::now();
-    long dcsc_set_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    auto dcsc_set_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
     // cout << "Edges: " << endl;
     // graph.print();

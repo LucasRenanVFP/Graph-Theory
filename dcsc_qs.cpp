@@ -32,7 +32,7 @@ public:
 
   void findComponents(vector<int> &vertices) {
     stack<pair<int, int>> work_stack;
-    if (vertices.size() > 0) work_stack.emplace(make_pair(0, vertices.size()));
+    if (vertices.size() > 0) work_stack.emplace(0, vertices.size());
 
     int current_id = 0;
 
@@ -85,15 +85,15 @@ public:
       components.push_back(component);
 
       if (desc_start - rem_start > 0) {
-        work_stack.emplace(make_pair(rem_start, desc_start));
+        work_stack.emplace(rem_start, desc_start);
       }
 
       if (component_start - desc_start > 0) {
-        work_stack.emplace(make_pair(desc_start, component_start));
+        work_stack.emplace(desc_start, component_start);
       }
 
       if (work.second - pred_start > 0) {
-        work_stack.emplace(make_pair(pred_start, work.second));
+        work_stack.emplace(pred_start, work.second);
       }
 
       current_id += 0b100;
@@ -135,11 +135,14 @@ public:
       }
     }
 
-    if (vertices.size()) findComponents(vector<int>(vertices.begin(), vertices.end()));
+    if (vertices.size()) {
+      vector<int> vertices_vec(vertices.begin(), vertices.end());
+      findComponents(vertices_vec);
+    }
   }
 
   vector<vector<int>> result() {
-    for(int i = 0; i < components.size(); i++) {
+    for(size_t i = 0; i < components.size(); i++) {
       sort(components[i].begin(), components[i].end());
     }
 
@@ -149,8 +152,8 @@ public:
   }
 
   void print() {
-    for(int i = 0; i < components.size(); i++) {
-      for(int j = 0; j < components[i].size(); j++) {
+    for(size_t i = 0; i < components.size(); i++) {
+      for(size_t j = 0; j < components[i].size(); j++) {
         if(j != 0) cout << " ";
         cout << components[i][j];
       }

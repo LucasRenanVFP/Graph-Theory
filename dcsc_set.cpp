@@ -13,10 +13,8 @@ class DCSC_Set {
 public:
   Graph& graph;
   vector<vector<int>> components;
-  vector<int> pred_count;
-  vector<int> desc_count;
 
-  DCSC_Set(Graph& graph) : graph(graph), pred_count(graph.n), desc_count(graph.n) {}
+  DCSC_Set(Graph& graph) : graph(graph) {}
 
   void getDescendants(int v,
                       unordered_set<int> &vertices,
@@ -59,22 +57,22 @@ public:
       getDescendants(v, vertices, desc, desc_pred);
       getPredecessors(v, vertices, pred, desc_pred);
 
-      for(int v : desc) {
-        if(pred.find(v) != pred.end()) {
-          component.push_back(v);
+      for(int u : desc) {
+        if(pred.find(u) != pred.end()) {
+          component.push_back(u);
         }
       }
       components.push_back(component);
 
-      for (int i : desc_pred) {
-        vertices.erase(i);
+      for (int u : desc_pred) {
+        vertices.erase(u);
       }
 
       if (vertices.size() == 0) work_stack.pop();
 
-      for (int i : component) {
-        pred.erase(i);
-        desc.erase(i);
+      for (int u : component) {
+        pred.erase(u);
+        desc.erase(u);
       }
       if (pred.size() != 0) work_stack.push(pred);
       if (desc.size() != 0) work_stack.push(desc);
@@ -120,7 +118,7 @@ public:
   }
 
   vector<vector<int>> result() {
-    for(int i = 0; i < components.size(); i++) {
+    for(size_t i = 0; i < components.size(); i++) {
       sort(components[i].begin(), components[i].end());
     }
 
@@ -130,8 +128,8 @@ public:
   }
 
   void print() {
-    for(int i = 0; i < components.size(); i++) {
-      for(int j = 0; j < components[i].size(); j++) {
+    for(size_t i = 0; i < components.size(); i++) {
+      for(size_t j = 0; j < components[i].size(); j++) {
         if(j != 0) cout << " ";
         cout << components[i][j];
       }
