@@ -3,8 +3,14 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
+#include <thread>
+#include <atomic>
+#include <future>
+#include <functional>
 
 #include "graph.h"
+#include "ThreadPool.h"
+#include "blockingconcurrentqueue.h"
 
 using namespace std;
 
@@ -34,71 +40,88 @@ public:
     stack<pair<int, int>> work_stack;
     if (vertices.size() > 0) work_stack.emplace(0, vertices.size());
 
-    int current_id = 0;
+    ThreadPool pool(thread::hardware_concurrency());
+    moodycamel::BlockingConcurrentQueue<vector<int>> result_queue;
 
-    while (work_stack.size() != 0) {
-      pair<int, int> work = work_stack.top();
-      work_stack.pop();
+    auto comp = [this](int a, int b) {
+      return work_id[a] < work_id[b];
+    };
 
-      int v = vertices[work.first];
+    atomic_int current_id(0);
+    atomic_int work_count(0);
+    function<void(int, int)> worker = [&](int begin, int end) {
+      int v = vertices[begin];
+      int id = (current_id += 0b100);
 
-      for (int i = work.first; i < work.second; i++) {
-        work_id[vertices[i]] = current_id;
+      for (int i = begin; i < end; i++) {
+        work_id[vertices[i]] = id;
       }
 
-      getDescendants(v, current_id);
-      getPredecessors(v, current_id);
+      getDescendants(v, id);
+      getPredecessors(v, id);
 
       // vector segment is re-ordered as:
       // ... | rem | desc \ comp | comp | pred \ comp | ...
-      auto comp = [this](int a, int b) {
-        return work_id[a] < work_id[b];
-      };
+      sort(vertices.begin() + begin, vertices.begin() + end, comp);
 
-      sort(vertices.begin() + work.first, vertices.begin() + work.second, comp);
-
-      int rem_start = work.first;
-      int desc_start = work.second;
-      int component_start = work.second;
-      int pred_start = work.second;
+      int rem_start = begin;
+      int desc_start = end;
+      int component_start = end;
+      int pred_start = end;
 
       vector<int> component;
 
-      for (int i = work.first; i < work.second; i++) {
+      for (int i = begin; i < end; i++) {
         int vertex_id = work_id[vertices[i]];
 
-        if (vertex_id == (current_id | 0b01)) {
-          if (desc_start == work.second) desc_start = i;
+        if (vertex_id == (id | 0b01)) {
+          if (desc_start == end) desc_start = i;
 
-        } else if (vertex_id == (current_id | 0b10)) {
-          if (desc_start == work.second) desc_start = i;
-          if (component_start == work.second) component_start = i;
+        } else if (vertex_id == (id | 0b10)) {
+          if (desc_start == end) desc_start = i;
+          if (component_start == end) component_start = i;
           component.push_back(vertices[i]);
 
-        } else if (vertex_id == (current_id | 0b11)) {
-          if (desc_start == work.second) desc_start = i;
-          if (component_start == work.second) component_start = i;
-          if (pred_start == work.second) pred_start = i;
+        } else if (vertex_id == (id | 0b11)) {
+          if (desc_start == end) desc_start = i;
+          if (component_start == end) component_start = i;
+          if (pred_start == end) pred_start = i;
         }
       }
 
-      components.push_back(component);
+      // components.push_back(component);
 
       if (desc_start - rem_start > 0) {
-        work_stack.emplace(rem_start, desc_start);
+        work_count++;
+        pool.enqueue(worker, rem_start, desc_start);
+        // work_stack.emplace(rem_start, desc_start);
       }
 
       if (component_start - desc_start > 0) {
-        work_stack.emplace(desc_start, component_start);
+        work_count++;
+        pool.enqueue(worker, desc_start, component_start);
       }
 
-      if (work.second - pred_start > 0) {
-        work_stack.emplace(pred_start, work.second);
+      if (end - pred_start > 0) {
+        work_count++;
+        pool.enqueue(worker, pred_start, end);
+        // work_stack.emplace(pred_start, work.second);
       }
 
-      current_id += 0b100;
+      result_queue.enqueue(component);
+    };
+
+    work_count++;
+    pool.enqueue(worker, 0, vertices.size());
+
+    while (work_count != 0) {
+      work_count--;
+
+      vector<int> component;
+      result_queue.wait_dequeue(component);
+      components.emplace_back(component);
     }
- }
+ };
 
   void run() {
     unordered_set<int> vertices;
