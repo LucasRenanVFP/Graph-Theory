@@ -5,7 +5,6 @@
 #include <unordered_set>
 #include <thread>
 #include <atomic>
-#include <future>
 #include <functional>
 
 #include "graph.h"
@@ -19,8 +18,9 @@ public:
   Graph& graph;
   vector<vector<int>> components;
   vector<int> work_id;
+  int threads;
 
-  DCSC_QS(Graph& graph) : graph(graph), work_id(graph.n) {}
+  DCSC_QS(Graph& graph, int threads) : graph(graph), work_id(graph.n), threads(threads) {}
 
   void getDescendants(int v, int current_id) {
     work_id[v] |= 0b01;
@@ -40,7 +40,7 @@ public:
     stack<pair<int, int>> work_stack;
     if (vertices.size() > 0) work_stack.emplace(0, vertices.size());
 
-    ThreadPool pool(thread::hardware_concurrency());
+    ThreadPool pool(threads);
     moodycamel::BlockingConcurrentQueue<vector<int>> result_queue;
 
     auto comp = [this](int a, int b) {
@@ -158,6 +158,7 @@ public:
       }
     }
 
+    cout << "Trim found " << components.size() << " components" << endl;
     if (vertices.size()) {
       vector<int> vertices_vec(vertices.begin(), vertices.end());
       findComponents(vertices_vec);

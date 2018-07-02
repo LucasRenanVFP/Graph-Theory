@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     auto end_time = chrono::high_resolution_clock::now();
     auto kos_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
-    DCSC_QS dcsc_qs(graph);
+    DCSC_QS dcsc_qs(graph, 1);
     start_time = chrono::high_resolution_clock::now();
     dcsc_qs.run();
     end_time = chrono::high_resolution_clock::now();
