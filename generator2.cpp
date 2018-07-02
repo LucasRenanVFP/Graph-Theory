@@ -4,6 +4,7 @@
 #include "kosaraju.cpp"
 #include "dcsc_qs.cpp"
 #include "dcsc_set.cpp"
+#include "tarjan.cpp"
 
 using namespace std;
 
@@ -70,7 +71,13 @@ int main(int argc, char* argv[]) {
     end_time = chrono::high_resolution_clock::now();
     auto dcsc_set_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
 
-    // cout << "Edges: " << endl;
+    Tarjan tarjan(graph);
+    start_time = chrono::high_resolution_clock::now();
+    tarjan.run();
+    end_time = chrono::high_resolution_clock::now();
+    auto tarjan_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
+    
+		// cout << "Edges: " << endl;
     // graph.print();
     cout << "Components Kosaraju: " << kos_time << "ms" << endl;
     // kos.print();
@@ -78,12 +85,15 @@ int main(int argc, char* argv[]) {
     // dcsc.print();
     cout << "Components DCSC (Set): " << dcsc_set_time << "ms" << endl;
 
-    if (dcsc_qs.result() == kos.result() && kos.result() == dcsc_set.result()) {
+		cout << "Components Tarjan: " << tarjan_time << "ms" << endl;
+
+    if (dcsc_qs.result() == kos.result() && kos.result() == dcsc_set.result() && tarjan.result() == kos.result()) {
         cout << "Results match (" << dcsc_qs.result().size() << " scc's)";
     } else {
         cout << "Kosaraju found " << kos.result().size() << " components" << endl;
         cout << "DCSC (QS) found " << dcsc_qs.result().size() << " components" << endl;
         cout << "DCSC (Set) found " << dcsc_set.result().size() << " components" << endl;
+				cout << "Tarjan found " << tarjan.result().size() << " components" << endl;
     }
 
     return 0;

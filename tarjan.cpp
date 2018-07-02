@@ -1,11 +1,13 @@
 #include<bits/stdc++.h>
 
+#include "graph.h"
+
 using namespace std;
 
 class Tarjan {
   public:
-  vector< vector<int> > graph;
-  int n;
+  Graph& graph;
+	int n;
   stack<int> vertex_stack;
   vector< vector<int> > groups;
   vector<bool> used;
@@ -15,20 +17,14 @@ class Tarjan {
   int current_index;
   int current_group;
   
-  Tarjan() {}
-
-  Tarjan(int _n) : n(_n), graph(_n + 1), used(_n + 1, false), groups(_n + 2), lowest(_n + 1), level(_n + 1), on_stack(_n + 1, false) {}
-
-  void addEdge(int u, int v) {
-    graph[u].push_back(v);
-  }
+  Tarjan(Graph& graph) : graph(graph), n(graph.n), used(n, false), groups(n + 2), lowest(n), level(n), on_stack(n, false) {}
 
   void dfs(int u) {
     used[u] = true;
     lowest[u] = level[u] = current_index++;
     vertex_stack.push(u);
     on_stack[u] = true;
-    for(int v : graph[u]) {
+    for(int v : graph.children[u]) {
       if(!used[v]) {
         dfs(v);
         lowest[u] = min(lowest[u], lowest[v]);
@@ -49,51 +45,34 @@ class Tarjan {
     }
   }
 
-  void process() {
+  void run() {
     current_index = 1;
     current_group = 0;
-    for(int i = 1; i <= n; i++) {
+    for(int i = 0; i < n; i++) {
       if(!used[i]) dfs(i);
     }
     for(int i = 0; i < current_group; i++) {
       sort(groups[i].begin(), groups[i].end());
     }
-    sort(groups.begin(), groups.begin() + current_group);
+    sort(groups.begin(), groups.begin() + min(current_group, (int)groups.size()));
   }
 
-  vector< vector<int> > getSCC() {
-    process();
+  vector< vector<int> > result() {
     vector< vector<int> > ret;
-    for(int i = 0; i <= n + 1; i++) {
+    for(int i = 0; i < current_group; i++) {
       if(groups[i].size() == 0) break;
       ret.push_back(groups[i]);
     }
+		/*for(int i = 0; i < ret.size(); i++) {
+			cout << "group #" << i << ": ";
+			for(int j = 0; j < ret[i].size(); j++) {
+				cout << ret[i][j] << " ";
+			}
+			cout << endl;
+		}*/
     return ret;
   }
 };
-
-int n, m;
-
-int main() {
-  ios::sync_with_stdio(false);
-  cin >> n >> m;
-  Tarjan tarj(n);
-  for(int i = 0; i < m; i++) {
-    int u, v;
-    cin >> u >> v;
-    tarj.addEdge(u, v);
-  }
-  vector< vector<int> > scc = tarj.getSCC();
-  for(int i = 0; i < scc.size(); i++) {
-    cout << "Group #" << i << ":\n";
-    for(int j = 0; j < scc[i].size(); j++) {
-      if(j != 0) cout << " ";
-      cout << scc[i][j];
-    }
-    cout << "\n";
-  }
-  return 0;
-}
 
 
 
