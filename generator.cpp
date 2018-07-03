@@ -1,27 +1,20 @@
 #include <random>
 #include <chrono>
-#include <iostream>
-#include <sstream>
 
 #include "graph.h"
-#include "kosaraju.cpp"
-#include "dcsc_qs.cpp"
-#include "dcsc_set.cpp"
 
 using namespace std;
 
 random_device rd;
 mt19937 rng(rd());
 
-Graph generate(int n, int m) {
-    Graph graph(n);
-
-    uniform_int_distribution<int> uniform(0, n - 1);
+void connect_cluster(Graph& graph, vector<int> cluster, int m) {
+    uniform_int_distribution<int> uniform(0, cluster.size() - 1);
 
     for (int i = 0; i < m; i++) {
         while (true) {
-            int u = uniform(rng);
-            int v = uniform(rng);
+            int u = cluster[uniform(rng)];
+            int v = cluster[uniform(rng)];
 
             if (u != v && !graph.hasEdge(u, v)) {
                 graph.addEdge(u, v);
@@ -29,57 +22,44 @@ Graph generate(int n, int m) {
             }
         }
     }
+}
 
+Graph generate(int n, int m) {
+    Graph graph(n);
+    vector<int> vertices(n);
+
+    for (int i = 0; i < n; i++) {
+        vertices[i] = i;
+    }
+
+    connect_cluster(graph, vertices, m);
     return graph;
 }
 
-int main(int argc, char* argv[]) {
-    int vertices, edges;
-    if (argc < 3) {
-        cout << "usage: " << argv[0] << " [vertices] [edges]" << endl;
-        exit(1);
+Graph generate_clusters(int n, int m, int clusters, int bridges) {
+    Graph graph(n * clusters);
+
+    for (int i = 0; i < clusters; i++) {
+        vector<int> cluster(n);
+
+        for (int j = 0; j < n; j++) {
+            cluster[j] = i * n + j;
+        }
+
+        connect_cluster(graph, cluster, m);
     }
 
-    stringstream(argv[1]) >> vertices;
-    stringstream(argv[2]) >> edges;
-    cout << vertices << " vertices / " << edges << " edges" << endl;
+    uniform_int_distribution<int> vertex_dist(0, n - 1);
+    Graph cluster_graph = generate(clusters, bridges);
+    for (int v = 0; v < clusters; v++) {
+        for (int u : cluster_graph.children[v]) {
+            int source = v * n + vertex_dist(rng);
+            int target = u * n + vertex_dist(rng);
 
-    Graph graph = generate(vertices, edges);
-
-    Kosaraju kos(graph);
-    auto start_time = chrono::high_resolution_clock::now();
-    kos.run();
-    auto end_time = chrono::high_resolution_clock::now();
-    auto kos_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
-
-    DCSC_QS dcsc_qs(graph);
-    start_time = chrono::high_resolution_clock::now();
-    dcsc_qs.run();
-    end_time = chrono::high_resolution_clock::now();
-    auto dcsc_qs_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
-
-    DCSC_Set dcsc_set(graph);
-    start_time = chrono::high_resolution_clock::now();
-    dcsc_set.run();
-    end_time = chrono::high_resolution_clock::now();
-    auto dcsc_set_time = chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
-
-    // cout << "Edges: " << endl;
-    // graph.print();
-    cout << "Components Kosaraju: " << kos_time << "ms" << endl;
-    // kos.print();
-    cout << "Components DCSC (QS): " << dcsc_qs_time << "ms" << endl;
-    // dcsc.print();
-    cout << "Components DCSC (Set): " << dcsc_set_time << "ms" << endl;
-
-    if (dcsc_qs.result() == kos.result() && kos.result() == dcsc_set.result()) {
-        cout << "Results match (" << dcsc_qs.result().size() << " scc's)";
-    } else {
-        cout << "Kosaraju found " << kos.result().size() << " components" << endl;
-        cout << "DCSC (QS) found " << dcsc_qs.result().size() << " components" << endl;
-        cout << "DCSC (Set) found " << dcsc_set.result().size() << " components" << endl;
+            graph.addEdge(source, target);
+        }
     }
 
-    return 0;
+    return graph;
 }
 
