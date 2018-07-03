@@ -89,12 +89,9 @@ public:
         }
       }
 
-      // components.push_back(component);
-
       if (desc_start - rem_start > 0) {
         work_count++;
         pool.enqueue(worker, rem_start, desc_start);
-        // work_stack.emplace(rem_start, desc_start);
       }
 
       if (component_start - desc_start > 0) {
@@ -105,7 +102,6 @@ public:
       if (end - pred_start > 0) {
         work_count++;
         pool.enqueue(worker, pred_start, end);
-        // work_stack.emplace(pred_start, work.second);
       }
 
       result_queue.enqueue(component);

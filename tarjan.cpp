@@ -1,4 +1,5 @@
-#include<bits/stdc++.h>
+#include <vector>
+#include <stack>
 
 #include "graph.h"
 
@@ -16,7 +17,7 @@ class Tarjan {
   vector<int> level;
   int current_index;
   int current_group;
-  
+
   Tarjan(Graph& graph) : graph(graph), n(graph.n), used(n, false), groups(n + 2), lowest(n), level(n), on_stack(n, false) {}
 
   void dfs(int u) {
@@ -51,13 +52,14 @@ class Tarjan {
     for(int i = 0; i < n; i++) {
       if(!used[i]) dfs(i);
     }
+  }
+
+  vector< vector<int> > result() {
     for(int i = 0; i < current_group; i++) {
       sort(groups[i].begin(), groups[i].end());
     }
     sort(groups.begin(), groups.begin() + min(current_group, (int)groups.size()));
-  }
 
-  vector< vector<int> > result() {
     vector< vector<int> > ret;
     for(int i = 0; i < current_group; i++) {
       if(groups[i].size() == 0) break;
